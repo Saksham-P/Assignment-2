@@ -16,33 +16,43 @@
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
     </head>
     
-    <body onload="startGame()">
-        <main>
+    <body onload="startLoop()">
+        <main id="main-players">
+            <div id="popup">
+                <div>
+                    <button id="jump-input" onclick="readInput('jump')">Press Button To Record Jump Button</button>
+                    <p id="jump">Button Selected: None</p>
+                </div>
+                <div>
+                    <button id="power-input" onclick="readInput('power')">Press Button to Record Power Button</button>
+                    <p id="power">Button Selected: None</p>
+                </div>
+                <div>
+                    <button onclick="checkInputs()">Done!</button>
+                </div>
+            </div>
             <div id="main-content">
                 <div id="main-text">
                     <h1>HTML Run</h1>
                     <h2>By: Saksham Puri</h2>
                     <h4><a href="#below">Learn more about the Game</a></h4>
                     <div id="show-players">
-                        <div class="display player1">Player 1</div>
-                        <div class="display player2">Player 2</div>
                     </div>
                     <button id="add-player" onclick="addPlayer()">Add Player</button>
                     <button id="play-button" onclick="playGame()">Play</button>
+                    <button id="mobile-button" onclick="switchMobile()">Switch to Mobile Version</button>
                 </div>
                 <div id="ground">
                     <div id="player-1-touch">
-                        <button class="touch">P1Up</button>
-                        <button class="touch">P1P</button>
+                        <button class="touch" onclick="playerButton(0, 0)">P1Up</button>
+                        <button class="touch" onclick="playerButton(0, 1)">P1P</button>
                     </div>
                     <div id="player-2-touch">
-                        <button class="touch">P2Up</button>
-                        <button class="touch">P1P</button>
+                        <button class="touch" onclick="playerButton(1, 0)">P2Up</button>
+                        <button class="touch" onclick="playerButton(1, 1)">P2P</button>
                     </div>
                 </div>
             </div>
-            <div class="player" id="player-1"></div>
-            <div class="player" id="player-2"></div>
         </main>
         <footer id="below">
             <div id="about-title">
@@ -52,20 +62,33 @@
             </div>
             <div id="about">
                 <ul>
-                    <li>This game is designed to be mainly played on a desktop with a decent screen size.
-                        <br>The minimum play-able witdth for the game is around 700px, 
-                        <br>below that it becomes hard for 2 players to use the same device.
+                    <li>This game is designed for desktop but is mobile-ready.
+                        <br>The minimum play-able witdth for the game is around 700px (landscape), 
+                        <br>below that it becomes hard for 2 players to use the same device.    
                     </li>
                     <li>HTML Run is almost like a 2D endless Runner, 
                         <br>but after a while the game ends and all surviving players win.
                     </li>
                     <li>The Objective of this game is for each player to survive
-                        <br>for as long as possible running away from HTML
-                        <br>until 1 player remains or surviving players reach the end
+                        <br>for as long as possible and dodging all obstacles
+                        <br>until 1 player remains or surviving players
+                        <br>reach the end (very very rare)
                     </li>
-                    <li>Explain the Rules, powerups and other things</li>
-                    <li>Controls and other random things</li>
-                    <li>How to add players (If implemented)</li>
+                    <li>There are 2 power ups players can get within the game
+                        <br>A sheild which protects player from getting hit by 1 obstacle and
+                        <br>Spring Boots, which makes the player jump high once.
+                    </li>
+                    <li>Each player will have 2 controls, and each player will be able
+                        <br>to choose which button to use for each action.
+                        <br>Players will have a jump button, and a power button.
+                        <br>Jump button makes the player jump, and power button uses 
+                        <br>the powerup the player has.
+                    </li>
+                    <li>To add players (desktop version only), players will need to
+                        <br>click "Add Player" button on the main page, which will prompt
+                        <br>the user to set buttons for jump and power for that player.
+                        <br>Maximum of 5 players can be added.
+                    </li>
                 </ul>
             </div>
         </footer>
