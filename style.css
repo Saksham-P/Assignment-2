@@ -225,7 +225,7 @@ body, html, h1, h2, h3, h4, h5, p{
     display: flex;
     flex-direction: row;
     justify-content: space-around;
-    margin-bottom: 5svh;
+    margin-bottom: 2svh;
 }
 
 #about-title h1{
@@ -245,7 +245,7 @@ body, html, h1, h2, h3, h4, h5, p{
 
 #about {
     text-align: left;
-    font-size: 1.3vw;
+    font-size: 1.15vw;
 }
 
 #about li{
