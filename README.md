@@ -1,6 +1,6 @@
 # SENG513-A2 - Saksham Puri
 
-## Title: HTML Run
+## Title: HTML Run (Basic Version)
 
 **Target Platform:** The game is designed to be played on a desktop / computer where users have access to a keyboard to control the movements of the player. However the game can be played on mobile devices (max 2 players) but it is not recommended as most mobile device browsers don't allow multiple touch interactions causing a bad user experience in web games.
 
