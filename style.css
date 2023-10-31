@@ -10,6 +10,7 @@ body, html, h1, h2, h3, h4, h5, p{
     padding: 0;
     margin: 0;
     overflow-y: hidden;
+    overflow-x: hidden;
     scroll-behavior: smooth;
     font-family: 'Rubik', sans-serif;
 }
@@ -22,6 +23,7 @@ body, html, h1, h2, h3, h4, h5, p{
     width: 6svh;
     background-size: cover;
     background-repeat: no-repeat;
+    border: 2px solid black;
 }
 
 .obstacle0 {
