@@ -1,6 +1,6 @@
 /* Course: SENG 513 */
-/* Date: Oct 10, 2023 */
-/* Assignment 2 */
+/* Date: Oct 26, 2023 */
+/* Assignment 3 */
 /* Name: Saksham Puri */
 /* UCID: 30140617 */
 
@@ -46,6 +46,25 @@ body, html, h1, h2, h3, h4, h5, p{
     background-image: url("https://cdn.icon-icons.com/icons2/2622/PNG/512/gui_exclamation_icon_157664.png");
 }
 
+.power {
+    position: absolute;
+    top: 50svh;
+    left: 100vw;
+    height: 6svh;
+    width: 6svh;
+    background-size: cover;
+    background-repeat: no-repeat;
+    border: 2px solid blue;
+}
+
+.power0 {
+    background-image: url("https://cdn.icon-icons.com/icons2/2066/PNG/512/shield_icon_125161.png");
+}
+
+.power1 {
+    background-image: url("https://cdn.icon-icons.com/icons2/3196/PNG/512/angle_up_double_icon_194765.png");
+}
+
 #popup {
     position: absolute;
     display: none;
@@ -71,6 +90,11 @@ body, html, h1, h2, h3, h4, h5, p{
 #popup button {
     border-radius: 10px;
     background-color: rgba(220, 112, 202, 0.3);
+    font-size: 1.1vw;
+}
+
+#popup p {
+    font-size: 1.4vw;
 }
 
 #main-content {

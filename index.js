@@ -1,6 +1,6 @@
 /* Course: SENG 513 */
-/* Date: Oct 10, 2023 */
-/* Assignment 2 */
+/* Date: Oct 26, 2023 */
+/* Assignment 3 */
 /* Name: Saksham Puri */
 /* UCID: 30140617 */
 
@@ -15,6 +15,8 @@ let readingType = 0;
 let usedInputs = [];
 let tempJump;
 let tempPower;
+let powerImg1 = "https://cdn.icon-icons.com/icons2/2066/PNG/512/shield_icon_125161.png"
+let powerImg2 = "https://cdn.icon-icons.com/icons2/3196/PNG/512/angle_up_double_icon_194765.png"
 
 //All DOM element refrences if user plays in mobile version
 const player1Touch = document.getElementById("player-1-touch");
@@ -32,12 +34,16 @@ const ground = document.getElementById("ground");
 
 //All varialbes to keep track of players
 let playerList = [];
+let deadPlayers = [];
 let obstacleList = [];
 let playerCount = 0;
 
 let jumpHeight = window.innerHeight/170;
 let mainInterval;
 let speed = 0.1;
+
+let gameStarted = false;
+let gameFinished = false;
 
 //If device in portrait mode, suggest landscape
 window.matchMedia("(orientation: portrait)").addEventListener("change", e => {
@@ -68,7 +74,7 @@ document.addEventListener("keydown", (e) => {
     } else if (readingType == 2) {
         powerInputText.innerHTML = `Button Selected: ${e.code}`;
         tempPower = e.code;
-        powerInputButton.innerHTML = "Press Button To Record Jump Button";
+        powerInputButton.innerHTML = "Press Button To Record Power Up Button";
         readingType = 0;
     }
 
@@ -82,7 +88,14 @@ document.addEventListener("keydown", (e) => {
                 tempPlayer.jumping = true;
             }
         } else if (tempPlayer.powerKey == e.code) {
+            if (tempPlayer.power == 0) {
+                tempPlayer.setShield(true);
 
+            } else if (tempPlayer.power == 1 && !tempPlayer.jumping) {
+                tempPlayer.speedY = Math.floor(jumpHeight*1.5);
+                tempPlayer.jumping = true;
+                tempPlayer.setPower(undefined);
+            }
         }
     }
 })
@@ -97,6 +110,14 @@ function playerButton(player, action) {
             playerList[player].jumping = true;
         }
     } else if (action == 1) {
+        if (playerList[player].power == 0) {
+            playerList[player].setShield(true);
+
+        } else if (playerList[player].power == 1 && !playerList[player].jumping) {
+            playerList[player].speedY = Math.floor(jumpHeight*1.5);
+            playerList[player].jumping = true;
+            playerList[player].setPower(undefined);
+        }
     }
 }
 
@@ -106,9 +127,51 @@ class Player {
         this.element = element;
         this.jumpKey = jumpKey;
         this.powerKey = powerKey;
+
+        this.score = 0;
+        this.scoreElement = undefined;
+
+        this.power = undefined;
+        this.powerElement = undefined;
+        this.shieldActive = false;
+        
         this.speedX = 4.7;
         this.speedY = 0;
         this.jumping = false;
+    }
+
+    setShield(val) {
+        if (val) {
+            this.element.style.border = '2px solid blue';
+            this.shieldActive = true;
+        } else {
+            this.element.style.border = 'none';
+            this.shieldActive = false;
+        }
+    }
+
+    incrementScore(score) {
+        this.score += score;
+        this.scoreElement.innerHTML = `Score: ${this.score}`;
+    }
+
+    setScoreElement(element) {
+        this.scoreElement = element;
+    }
+
+    setPower(power) {
+        this.power = power;
+        if (power == undefined) this.powerElement.style.display = "none";
+        else {
+            this.powerElement.style.display = "inline";
+            if (power == 0) this.powerElement.src = powerImg1;
+            else if (power == 1) this.powerElement.src = powerImg2;
+        }
+        
+    }
+
+    setPowerElement(element) {
+        this.powerElement = element;
     }
 
     //function to input gravity to player
@@ -149,9 +212,10 @@ class Player {
 
 //Elem class that holds all the components for the obstacle or powerups
 class Elem {
-    constructor(element, type) {
+    constructor(element, type, value) {
         this.element = element;
-        this.type = type
+        this.type = type;
+        this.value = value;
     }
 
     //To get the top of the element
@@ -257,14 +321,18 @@ function checkInputs() {
     ${Math.floor(Math.random() * 256)}, 0.8), rgba(${Math.floor(Math.random() * 256)}, ${Math.floor(Math.random() * 256)},
     ${Math.floor(Math.random() * 256)}, 0.8))`;
 
-    const divElement = document.createElement('div');
+    const parentDiv = document.createElement("div");
+    parentDiv.style.textAlign = "center";
+
+    const divElement = document.createElement("div");
     divElement.classList.add("display");
     divElement.style.background = styleColor;
     divElement.style.fontSize = "2vh";
     divElement.innerHTML = `Player ${playerCount}`;
-    showPlayers.append(divElement);
+    parentDiv.append(divElement);
+    showPlayers.append(parentDiv);
 
-    const playerElement = document.createElement('div');
+    const playerElement = document.createElement("div");
     playerElement.classList.add("player");
     playerElement.style.background = styleColor;
     mainPlayers.append(playerElement);
@@ -290,12 +358,16 @@ function addPlayer() {
             ${Math.floor(Math.random() * 256)}, 0.8))`;
 
             //Create div element and put it as display player
-            const divElement = document.createElement('div');
+            const parentDiv = document.createElement("div");
+            parentDiv.style.textAlign = "center";
+            
+            const divElement = document.createElement("div");
             divElement.classList.add("display");
             divElement.style.background = styleColor;
             divElement.style.fontSize = "2vh";
             divElement.innerHTML = `Player ${playerCount}`;
-            showPlayers.append(divElement);
+            parentDiv.append(divElement);
+            showPlayers.append(parentDiv);
 
             //Create div element for player
             const playerElement = document.createElement('div');
@@ -322,30 +394,36 @@ function addPlayer() {
 }
 
 //Function to add obstacles to the screen and to the game
-function addObstacle(random) {
+function addObstacle(random, type) {
+    let threshold;
+
     //Threshold to spawn objects
-    let threshold = 0.9;
+    if (type == "obstacle") threshold = 0.8;
+    else if (type == "power") threshold = 0.9;
 
     //If random number above threshold spawn object
     if (random >= threshold) {
 
-        console.log("success");
         //Generate random number to decide a random obstacle
-        random = Math.floor(Math.random() * 5);
+        if (type == "obstacle") random = Math.floor(Math.random() * 5);
+        else if (type == "power") random = Math.floor(Math.random() * 2);
+
         const obstacleElement = document.createElement('div');
-        obstacleElement.classList.add("obstacle");
-        if (random >= 0 && random <= 4) {
+        
+        if (type == "obstacle") {
+            obstacleElement.classList.add("obstacle");
             obstacleElement.classList.add(`obstacle${random}`);
         }
+        else if (type == "power") {
+            obstacleElement.classList.add("power");
+            obstacleElement.classList.add(`power${random}`);
+        }
+
         mainPlayers.append(obstacleElement);
-        const obstacle = new Elem(obstacleElement, "obstacle");
+
+        const obstacle = new Elem(obstacleElement, type, random);
         obstacleList.push(obstacle);
-
-        threshold = 0.9;
     }
-
-    //Decrease the threshold each time obstacle doesn't spawn to increase the odds
-    threshold -= 0.0001;
 }
 
 //function to remove the text/buttons and start the gameplay
@@ -362,6 +440,28 @@ function playGame() {
             return;
         }
     }
+
+    let cloneDiv = showPlayers.cloneNode(true);
+    let cloneElems = cloneDiv.children;
+
+    for (let i = 0; i < cloneElems.length; i++) {
+        let tempChild = cloneElems[i];
+
+        let tempP = document.createElement('p');
+        tempP.style.fontSize = "1.4vw";
+        tempP.innerHTML = "score: 0";
+        tempChild.append(tempP);
+
+        let tempImg = document.createElement('img');
+        tempImg.style.height = "6svh";
+        tempImg.style.width = "6svh";
+        tempChild.append(tempImg);
+
+        playerList[i].setScoreElement(tempP);
+        playerList[i].setPowerElement(tempImg);
+    }
+
+    cloneDiv.style.justifyContent = "space-evenly";
     
     //Remove the text and buttons in an animated way
     mainText.style.position = "relative";
@@ -371,12 +471,16 @@ function playGame() {
         y -= 1;
         if ((y + mainText.offsetHeight) < 0) {
             mainText.style.display = "none";
+            background.append(cloneDiv);
             clearInterval(intervalID);
         }
     }, 1);
 
     //Increase the speed of the background animations and the gameplay animations
     speed = 0.4;
+
+    floor = ground.offsetTop;
+    gameStarted = true;
 }
 
 //main loop that keeps everything moving
@@ -395,12 +499,13 @@ function startLoop() {
 
     let groundSpeed = 5.5;
     let groundPosX = 0;
-    let floor = ground.offsetTop;
+    var floor = ground.offsetTop;
 
     //Variables for player and obstacles
     let rotation = 0;
     let gravity = 0.05;
-    let holdSpawn = 100 - (speed * 10);
+    let holdSpawn = 400;
+    let holdScore = 200;
     let spawnTries = 0;
 
     mainInterval = setInterval(function() {
@@ -435,10 +540,16 @@ function startLoop() {
 
         //For each player that exists
         for (let i = 0; i < playerList.length; i++) {
+            if (!gameStarted) break;
+
             let tempPlayer = playerList[i];
 
             //Set the rotation of the player
             tempPlayer.setRotation(rotation);
+
+            if (holdScore <= 0) {
+                tempPlayer.incrementScore(1);
+            }
 
             //Affect player by gravity
             if (tempPlayer.jumping || tempPlayer.getBottom() < floor) {
@@ -456,24 +567,62 @@ function startLoop() {
             //Go through each obstacle and check if collided with player
             for (let i = 0; i < obstacleList.length; i++) {
                 let tempObstacle = obstacleList[i];
-                if (tempObstacle.getLeft() <= tempPlayer.getRight() && tempObstacle.getRight() >= tempPlayer.getLeft()) {
+                if (tempObstacle.getLeft() <= tempPlayer.getRight() && tempObstacle.getRight() >= tempPlayer.getLeft()
+                && tempObstacle.getTop() <= tempPlayer.getBottom() && tempObstacle.getBottom() >= tempPlayer.getTop()) {
+                    if (tempObstacle.type == "obstacle") {
+                        if (tempPlayer.shieldActive == true) {
+                            tempPlayer.setPower(undefined);
+                            tempPlayer.setShield(false);
+                        }
+                        else {
+                            deadPlayers.push(tempPlayer);
+                            tempPlayer.element.parentNode.removeChild(tempPlayer.element);
+                            playerList = playerList.filter(function (val) {
+                                return val !== tempPlayer;
+                            });
+                            playerCount -= 1;
+
+                            if (playerCount <= 1) {
+                                gameFinished = true;
+                            }
+                        }
+                        tempObstacle.element.parentNode.removeChild(tempObstacle.element);
+                        obstacleList = obstacleList.filter(function (val) {
+                            return val !== tempObstacle;
+                        });
+                    } else if (tempObstacle.type == "power") {
+                        if (tempPlayer.power == undefined) {
+                            tempPlayer.incrementScore(10);
+                            tempPlayer.setPower(tempObstacle.value);
+                            tempObstacle.element.parentNode.removeChild(tempObstacle.element);
+                            obstacleList = obstacleList.filter(function (val) {
+                                return val !== tempObstacle;
+                            });
+                        }
+                    }
                 }
             }
         }
+
+        if (holdScore <= 0) {
+            holdScore = 200;
+        }
+        holdScore -= 1;
 
         //Increase rotation
         rotation += 1;
 
         //If speed is more than 0.1, and holdSpawn is less than 0
         //try spawning obstacle
-        if (speed > 0.1 && holdSpawn <= 0) {
+        if (speed > 0.1 && holdSpawn <= speed*100) {
             console.log("Spawning");
-            addObstacle(Math.random());
-            holdSpawn = 100 - (speed * 10)*2;
+            addObstacle(Math.random(), "obstacle");
+            addObstacle(Math.random(), "power");
+            holdSpawn = 400;
 
-            if (spawnTries >= 30) {
+            if (spawnTries >= 15) {
                 spawnTries = 0;
-                speed += 0.1;
+                speed += 0.05;
             }
 
             spawnTries += 1;
