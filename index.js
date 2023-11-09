@@ -11,6 +11,9 @@ const powerInputText = document.getElementById("power");
 const jumpInputButton = document.getElementById("jump-input");
 const powerInputButton = document.getElementById("power-input");
 
+//DOM element for Game Over overlay
+const gameOver = document.getElementById("gameOver");
+
 let readingType = 0;
 let usedInputs = [];
 let tempJump;
@@ -29,19 +32,22 @@ let mode = 0;
 const mainText = document.getElementById("main-text");
 const showPlayers = document.getElementById("show-players");
 const mainPlayers = document.getElementById("main-players");
-const background = document.getElementById("main-content"); 
+const background = document.getElementById("main-content");
 const ground = document.getElementById("ground");
+let playerScores = undefined;
 
 //All varialbes to keep track of players
 let playerList = [];
 let deadPlayers = [];
 let obstacleList = [];
 let playerCount = 0;
+let highscore = 0;
 
 let jumpHeight = window.innerHeight/170;
 let mainInterval;
 let speed = 0.1;
 
+//Game state variables
 let gameStarted = false;
 let gameFinished = false;
 
@@ -124,6 +130,8 @@ function playerButton(player, action) {
 //Player class that holds all the components for a player
 class Player {
     constructor(element, jumpKey, powerKey) {
+        this.number = playerCount;
+        
         this.element = element;
         this.jumpKey = jumpKey;
         this.powerKey = powerKey;
@@ -140,6 +148,7 @@ class Player {
         this.jumping = false;
     }
 
+    //If player picks up a shield and enables it
     setShield(val) {
         if (val) {
             this.element.style.border = '2px solid blue';
@@ -150,15 +159,18 @@ class Player {
         }
     }
 
+    //Every second score is incremented
     incrementScore(score) {
         this.score += score;
         this.scoreElement.innerHTML = `Score: ${this.score}`;
     }
 
+    //Sets the score DOM element
     setScoreElement(element) {
         this.scoreElement = element;
     }
 
+    //If player picks up a power and the player doesn't have one, set power
     setPower(power) {
         this.power = power;
         if (power == undefined) this.powerElement.style.display = "none";
@@ -170,6 +182,7 @@ class Player {
         
     }
 
+    //Sets the power DOM element
     setPowerElement(element) {
         this.powerElement = element;
     }
@@ -248,11 +261,11 @@ class Elem {
 function switchMobile() {
 
     //Delete all players from screen
-    displayClass = document.getElementsByClassName("display");
+    let displayClass = document.getElementsByClassName("display");
     while (displayClass[0]) {
         displayClass[0].parentNode.removeChild(displayClass[0]);
     }
-    playerClass = document.getElementsByClassName("player");
+    let playerClass = document.getElementsByClassName("player");
     while (playerClass[0]) {
         playerClass[0].parentNode.removeChild(playerClass[0]);
     }
@@ -426,6 +439,87 @@ function addObstacle(random, type) {
     }
 }
 
+//Function to reset game state to make it replayable
+function reset() {
+
+    //Delete playerScore screen
+    playerScores.parentNode.removeChild(playerScores);
+    
+    //Empty ShowPlayers and Game Over Screen
+    showPlayers.replaceChildren("");
+    gameOver.replaceChildren("");
+
+    //Any elements with display, player, obstacle, and power classes get deleted
+    let temp = document.getElementsByClassName("display");
+    while (temp[0]) {
+        temp[0].parentNode.removeChild(temp[0]);
+    }
+    temp = document.getElementsByClassName("player");
+    while (temp[0]) {
+        temp[0].parentNode.removeChild(temp[0]);
+    }
+    temp = document.getElementsByClassName("obstacle");
+    while (temp[0]) {
+        temp[0].parentNode.removeChild(temp[0]);
+    }
+    temp = document.getElementsByClassName("power");
+    while (temp[0]) {
+        temp[0].parentNode.removeChild(temp[0]);
+    }
+
+    //Reset needed variables
+    playerList = []
+    playerList = [];
+    deadPlayers = [];
+    obstacleList = [];
+    usedInputs = [];
+    speed = 0.1;
+    playerCount = 0;
+    gameFinished = false;
+    gameStarted = false;
+    gameOver.style.display = "none";
+    mainText.style.top = "0px";
+    mainText.style.display = "block";
+
+    //Start the loop once again
+    startLoop();
+}
+
+//Function that opens the game Over overlay
+function finished() {
+
+    //If the current player score is higher than highscore, then update highscore 
+    if (playerList[0].score > highscore) highscore = playerList[0].score;
+
+    //Set display for overlay
+    gameOver.style.display = "flex";
+
+    //Add who Won
+    let won = document.createElement('p');
+    won.innerHTML = `Game Over, Player ${playerList[0].number} Won!`;
+    gameOver.append(won);
+
+    //Add the player icon
+    playerList[0].element.classList.remove("player");
+    gameOver.append(playerList[0].element);
+
+    //Add the Score of the player
+    let temp = document.createElement('p');
+    temp.innerHTML = `score: ${playerList[0].score}`;
+    gameOver.append(temp);
+
+    //Add the highscore text
+    let temp1 = document.createElement('p');
+    temp1.innerHTML = `Highscore: ${highscore}`;
+    gameOver.append(temp1);
+
+    //Add the reset button
+    let temp2 = document.createElement('button');
+    temp2.innerHTML = `Reset`;
+    temp2.onclick = reset;
+    gameOver.append(temp2);
+}
+
 //function to remove the text/buttons and start the gameplay
 function playGame() {
 
@@ -441,8 +535,9 @@ function playGame() {
         }
     }
 
-    let cloneDiv = showPlayers.cloneNode(true);
-    let cloneElems = cloneDiv.children;
+    //Add scores and power up icons for each player
+    playerScores = showPlayers.cloneNode(true);
+    let cloneElems = playerScores.children;
 
     for (let i = 0; i < cloneElems.length; i++) {
         let tempChild = cloneElems[i];
@@ -461,7 +556,7 @@ function playGame() {
         playerList[i].setPowerElement(tempImg);
     }
 
-    cloneDiv.style.justifyContent = "space-evenly";
+    playerScores.style.justifyContent = "space-evenly";
     
     //Remove the text and buttons in an animated way
     mainText.style.position = "relative";
@@ -471,7 +566,7 @@ function playGame() {
         y -= 1;
         if ((y + mainText.offsetHeight) < 0) {
             mainText.style.display = "none";
-            background.append(cloneDiv);
+            background.append(playerScores);
             clearInterval(intervalID);
         }
     }, 1);
@@ -509,6 +604,12 @@ function startLoop() {
     let spawnTries = 0;
 
     mainInterval = setInterval(function() {
+
+        //If gameFinished flag is set, end the game
+        if (gameFinished) {
+            clearInterval(mainInterval);
+            finished();
+        }
 
         //Start moving the background
         background.style.backgroundPositionX = `${backgroundPosX}px`;
@@ -567,33 +668,56 @@ function startLoop() {
             //Go through each obstacle and check if collided with player
             for (let i = 0; i < obstacleList.length; i++) {
                 let tempObstacle = obstacleList[i];
+
+                //If player gets hit with obstacle
                 if (tempObstacle.getLeft() <= tempPlayer.getRight() && tempObstacle.getRight() >= tempPlayer.getLeft()
                 && tempObstacle.getTop() <= tempPlayer.getBottom() && tempObstacle.getBottom() >= tempPlayer.getTop()) {
+
+                    //If the obstacle is harmful
                     if (tempObstacle.type == "obstacle") {
+
+                        //Check if they have shield
                         if (tempPlayer.shieldActive == true) {
                             tempPlayer.setPower(undefined);
                             tempPlayer.setShield(false);
                         }
                         else {
-                            deadPlayers.push(tempPlayer);
-                            tempPlayer.element.parentNode.removeChild(tempPlayer.element);
-                            playerList = playerList.filter(function (val) {
-                                return val !== tempPlayer;
-                            });
+
+                            //If not, remove them from the game
                             playerCount -= 1;
 
-                            if (playerCount <= 1) {
+                            //If that was the only player playing, end game
+                            if (playerCount == 0) {
+                                gameFinished = true;
+                            } else if (playerCount == 1) {
+
+                                //If now last player remains, remove everyone else, and end game
+                                deadPlayers.push(tempPlayer);
+                                tempPlayer.element.parentNode.removeChild(tempPlayer.element);
+                                playerList = playerList.filter(function (val) {
+                                    return val !== tempPlayer;
+                                });
                                 gameFinished = true;
                             }
                         }
+
+                        //Remove the obstacle
                         tempObstacle.element.parentNode.removeChild(tempObstacle.element);
                         obstacleList = obstacleList.filter(function (val) {
                             return val !== tempObstacle;
                         });
                     } else if (tempObstacle.type == "power") {
+
+                        //If the obstacle is a power up and player doesn't have a power
                         if (tempPlayer.power == undefined) {
-                            tempPlayer.incrementScore(10);
+
+                            //Increase player score for getting powerup
+                            tempPlayer.incrementScore(2);
+
+                            //Give the player the power up
                             tempPlayer.setPower(tempObstacle.value);
+
+                            //Remove it from the game
                             tempObstacle.element.parentNode.removeChild(tempObstacle.element);
                             obstacleList = obstacleList.filter(function (val) {
                                 return val !== tempObstacle;
@@ -604,6 +728,7 @@ function startLoop() {
             }
         }
 
+        //How long to wait until incrementing score
         if (holdScore <= 0) {
             holdScore = 200;
         }
@@ -618,7 +743,7 @@ function startLoop() {
             console.log("Spawning");
             addObstacle(Math.random(), "obstacle");
             addObstacle(Math.random(), "power");
-            holdSpawn = 400;
+            holdSpawn = 400 - (speed*100);
 
             if (spawnTries >= 15) {
                 spawnTries = 0;
@@ -627,7 +752,6 @@ function startLoop() {
 
             spawnTries += 1;
         }
-
         holdSpawn -= 1;
     }, 5);
 }
